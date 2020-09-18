@@ -234,9 +234,9 @@ if __name__ == "__main__":
         for c in confidences:
             print(c)
         evals, metrics = get_evals(confidences, frequency, len(adj_matrix))
-        for row in evals_full:
+        for row in evals:
             print(row[0], '-->', row[1], '\nConfidence: ', row[2], '\nLift: ', row[3], '\nLeverage: ', row[4])
-        for row in m:
+        for row in metrics:
             print(row)
         
 

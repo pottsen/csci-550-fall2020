@@ -12,10 +12,7 @@ def get_candidates(k, frequents):
             for f1 in range(len(frequents)):
                 for f2 in range(f1+1, len(frequents)):
                     if frequents[f1][0:j]==frequents[f2][0:j]:
-#                         print('f1', frequents[f1][0:j+1])
-#                         print('f2', frequents[f2][j:])
                         candidates.append(frequents[f1][0:j+1]+frequents[f2][j:])
-#             print('candidates:', ca    # just work w    # just work way through by removing one each timeay through by removing one each timendidates)
     else:
         for f1 in range(len(frequents)):
             for f2 in range(f1+1, len(frequents)):
@@ -52,7 +49,6 @@ def frequent_item_sets(adj_matrix, C1_itemset, min_sup):
         supports = []
         for candidate in candidates:
             support = binary_matrix.where(binary_matrix[candidate].sum(axis=1) == len(candidate)).sum().max()
-#             support = binary_matrix[candidate].sum()
             if support >= min_sup:
                 frequents.append(candidate)
                 supports.append(support)
@@ -80,7 +76,6 @@ def prune_candidates(candidates, frequent_set):
     for c in range(len(candidates)):
         prune_flag = False
         for i in range(len(candidates[c])):
-#             try:
             temp = copy.deepcopy(candidates[c])
             temp.pop(i)
             if temp not in frequent_set:
@@ -88,10 +83,6 @@ def prune_candidates(candidates, frequent_set):
                 break
         if not prune_flag:
             pruned_list.append(candidates[c])
-#             except:
-#                 print('candidate ', candidates[c])
-#                 print('temp', temp)
-#                 print('pruned_list', pruned_list)
     return pruned_list
 
 def get_antecedents(parent_set, frequency_dict, max_key):
@@ -99,17 +90,14 @@ def get_antecedents(parent_set, frequency_dict, max_key):
     for key in frequency_dict.keys():
         if key < max_key:
             f_set = frequency_dict[key]
-#             print('f_set_can', f_set[0])
-#             print('f_set_sup', f_set[1])
+            print('f_set', list(f_set[0][1]))
             for i in range(len(f_set[0])):
-                if len(f_set[0][i])==1:
+                print(f_set[0][i])
+                if len(list(f_set[0][i]))==1:
                     temp = [f_set[0][i]]
                 else:
                     temp = f_set[0][i]
-#                 print(set(temp))
-#                 print(set(parent_set))
                 if set(temp).issubset(set(parent_set)):
-#                     print(temp,f_set[1][i])
                     antecedents.append([temp,f_set[1][i]])
                 
         else:
@@ -122,29 +110,25 @@ def get_association_rules(frequency_dict, min_conf):
     confidence_dict = []
     for key in frequency_dict.keys():
         if key > 1:
-            for parent_set in frequency_dict[key][0]:
-                print('parent set: ', parent_set)
-                antecedents = get_antecedents(parent_set, frequency_dict, key)
-                print('antecedents: ', antecedents)
-                
-#                 for antecedent in antecedents:
+            for i in range(len(frequency_dict[key][0])):
+                z = frequency_dict[key][0][i]
+                z_sup = frequency_dict[key][1][i]
+                print('parent set: ', z, z_sup)
+                antecedents = get_antecedents(z, frequency_dict, key)
+
                 while len(antecedents) > 0:
                     antecedent = antecedents.pop()
                     x = set(antecedent[0])
                     x_sup = antecedent[1]
                     print('X', x, x_sup)
-                    y = set(parent_set)-x
-                    for compliment in antecedents:
-                        if set(compliment[0]) == y:
-                            y_sup = compliment[1]
-                            print('Y', y, y_sup)
-                    confidence = y_sup/x_sup
+                    y = set(z)-x
+
+                    confidence = z_sup/x_sup
                     print(x, '->', y, confidence)
-                    if confidence > min_conf:
-                        confidence_dict.append([[list(x)],[list(y)], confidence])
+                    if confidence >= min_conf:
+                        confidence_dict.append([list(x),list(y), confidence])
                     else:
                         antecedents = prune_antecedents(x, antecedents)
-                        print('pruned', antecedents)
                             
     return confidence_dict
 
@@ -158,26 +142,38 @@ def prune_antecedents(x, antecedents):
             
     return pruned_antecedents
 
-def get_lifts(confidences_list, frequency_dict, size_dataset):
+def get_evals(confidences_list, frequency_dict, size_dataset):
+    metrics = []
     for c in confidences_list:
-        print(c)
+        print('\n', c)
         confidence = c[2]
         k = len(c[1])
         frequencies = frequency_dict[k]
+
         for i in range(len(frequencies[0])):
-            if set(c[1])==set(frequencies[0][i]):
+            if k==1:
+                temp = set([frequencies[0][i]])
+            else:
+                temp = set(frequencies[0][i])
+            if set(c[1])==temp:
                 support = frequencies[1][i]
         lift = confidence/(support/size_dataset)
+        print('lift', lift)
         
-#         c.append(lift)
+        c.append(lift)
         
-        # leverage = rel_sup(XY) - rel(x)*rel(y)
-        print(c[0])
-        xy = set(c[0].append(c[1]))
+        x = set(c[0])
+        y = set(c[1])
+        xy = x.union(y)
+
         k = len(xy)
         frequencies = frequency_dict[k]
         for i in range(len(frequencies[0])):
-            if xy==set(frequencies[0][i]):
+            if k==1:
+                temp = set([frequencies[0][i]])
+            else:
+                temp = set(frequencies[0][i])
+            if xy==temp:
                 support_xy = frequencies[1][i]
         rel_xy = support_xy/size_dataset
         
@@ -185,7 +181,11 @@ def get_lifts(confidences_list, frequency_dict, size_dataset):
         k = len(x)
         frequencies = frequency_dict[k]
         for i in range(len(frequencies[0])):
-            if xy==set(frequencies[0][i]):
+            if k==1:
+                temp = set([frequencies[0][i]])
+            else:
+                temp = set(frequencies[0][i])
+            if x==temp:
                 support_x = frequencies[1][i]
         rel_x = support_x/size_dataset
         
@@ -193,17 +193,21 @@ def get_lifts(confidences_list, frequency_dict, size_dataset):
         k = len(y)
         frequencies = frequency_dict[k]
         for i in range(len(frequencies[0])):
-            if xy==set(frequencies[0][i]):
+            if k==1:
+                temp = set([frequencies[0][i]])
+            else:
+                temp = set(frequencies[0][i])
+            if y==temp:
                 support_y = frequencies[1][i]
         rel_y = support_y/size_dataset
         
         leverage = rel_xy - rel_x*rel_y
+        print('leverage', leverage)
         
         c.append(leverage)
+        metrics.append([lift, leverage])
         
-
-        
-    return conficences_list
+    return confidences_list, metrics
 
 test2 = [
 [1, 1, 1, 0, 0],

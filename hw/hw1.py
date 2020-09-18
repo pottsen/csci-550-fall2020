@@ -219,6 +219,7 @@ if __name__ == "__main__":
         data = pd.read_csv(sys.argv[1])
         depts = set(data['Dept'])
         transactions = set(data['POS Txn'])
+        data["ID"] = data["ID"].astype(str)
         ids = set(data["ID"])
         
         adj_matrix = pd.DataFrame(columns = ids, index = transactions, data = np.zeros((len(transactions), len(ids))))
@@ -232,7 +233,7 @@ if __name__ == "__main__":
         confidences = get_association_rules(frequency, 1)
         for c in confidences:
             print(c)
-        evals, metrics = get_evals(confidence_full, frequent_full, len(adj_matrix))
+        evals, metrics = get_evals(confidences, frequency, len(adj_matrix))
         for row in evals_full:
             print(row[0], '-->', row[1], '\nConfidence: ', row[2], '\nLift: ', row[3], '\nLeverage: ', row[4])
         for row in m:

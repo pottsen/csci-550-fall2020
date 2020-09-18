@@ -3,6 +3,7 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import copy
+import sys
 
 def get_candidates(k, frequents):
     j = k-1
@@ -44,7 +45,7 @@ def frequent_item_sets(adj_matrix, C1_itemset, min_sup):
     candidates = get_candidates(1, frequents)
                     
     for k in range(2, max_itemset):
-        print(k)
+        print('Frequency set size: ', k)
         frequents = []
         supports = []
         for candidate in candidates:
@@ -91,13 +92,18 @@ def get_antecedents(parent_set, frequency_dict, max_key):
         if key < max_key:
             f_set = frequency_dict[key]
             print('f_set', list(f_set[0][1]))
+#             print('f_set_can', f_set[0])
+#             print('f_set_sup', f_set[1])
             for i in range(len(f_set[0])):
                 print(f_set[0][i])
                 if len(list(f_set[0][i]))==1:
                     temp = [f_set[0][i]]
                 else:
                     temp = f_set[0][i]
+#                 print(set(temp))
+#                 print(set(parent_set))
                 if set(temp).issubset(set(parent_set)):
+#                     print(temp,f_set[1][i])
                     antecedents.append([temp,f_set[1][i]])
                 
         else:
@@ -209,21 +215,49 @@ def get_evals(confidences_list, frequency_dict, size_dataset):
         
     return confidences_list, metrics
 
-test2 = [
-[1, 1, 1, 0, 0],
-[1, 1, 1, 1, 1],
-[1, 0, 1, 1, 0],
-[1, 0, 1, 1, 1],
-[1, 1, 1, 1, 0]
-]
+if __name__ == "__main__":
+        data = pd.read_csv(sys.argv[1])
+        depts = set(data['Dept'])
+        transactions = set(data['POS Txn'])
+        ids = set(data["ID"])
+        
+        adj_matrix = pd.DataFrame(columns = ids, index = transactions, data = np.zeros((len(transactions), len(ids))))
+        
+        for row in data.iterrows():
+            adj_matrix[row[1][2]].loc[row[1][0]] += 1
 
-test_df = pd.DataFrame(data=test2, columns = ['A', 'B', 'C', 'D', 'E'])
-frequent_test = frequent_item_sets(test_df, test_df.columns, 2)
-print('\n')
-for key in frequent_test.keys():
-    print('Item Set Length: ', key, '\n', frequent_test[key][0])
-confidence = get_association_rules(frequent_test, 1)
-for c in confidence:
-    print(c)
+        frequency = frequent_item_sets(adj_matrix, adj_matrix.columns, 3)
+        for key in frequency.keys():
+            print('Item Set Length: ', key, '\n', frequency[key])
+        confidences = get_association_rules(frequency, 1)
+        for c in confidences:
+            print(c)
+        evals, metrics = get_evals(confidence_full, frequent_full, len(adj_matrix))
+        for row in evals_full:
+            print(row[0], '-->', row[1], '\nConfidence: ', row[2], '\nLift: ', row[3], '\nLeverage: ', row[4])
+        for row in m:
+            print(row)
+        
 
-get_lifts(confidence, frequent_test, len(test_df)) 
+
+        
+
+
+        # test2 = [
+        # [1, 1, 1, 0, 0],
+        # [1, 1, 1, 1, 1],
+        # [1, 0, 1, 1, 0],
+        # [1, 0, 1, 1, 1],
+        # [1, 1, 1, 1, 0]
+        # ]
+
+        # test_df = pd.DataFrame(data=test2, columns = ['A', 'B', 'C', 'D', 'E'])
+        # frequent_test = frequent_item_sets(test_df, test_df.columns, 2)
+        # print('\n')
+        # for key in frequent_test.keys():
+        #     print('Item Set Length: ', key, '\n', frequent_test[key][0])
+        # confidence = get_association_rules(frequent_test, 1)
+        # for c in confidence:
+        #     print(c)
+
+        # get_lifts(confidence, frequent_test, len(test_df)) 

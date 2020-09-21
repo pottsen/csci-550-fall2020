@@ -266,6 +266,11 @@ def get_evals(confidences_list, frequency_dict, size_dataset):
     return confidences_list, metrics
 
 if __name__ == "__main__":
+        """
+        pass a CSV file with the items broken out by transaction, "POS Txn", and department ID/Item, "ID".
+
+        "POS Txn" , "ID"
+        """
         data = pd.read_csv(sys.argv[1])
         minSuport = sys.argv[2]
         conf = sys.argv[3]
@@ -277,7 +282,10 @@ if __name__ == "__main__":
         
         adjacency_matrix = pd.DataFrame(columns = ids, index = transactions, data = np.zeros((len(transactions), len(ids))))
         
+        # make adjacency matrix
         for row in data.iterrows():
+            # row[1][2] is place in row where 'ID', item id, is stored
+            # row[1][0] is place in row where 'POS Txn' (transaction number is stored)
             adjacency_matrix[row[1][2]].loc[row[1][0]] += 1
 
         # frequency = { key: [ list([frequent itemsets]), list([itemsets support])]}
@@ -298,23 +306,3 @@ if __name__ == "__main__":
         for row in sport[0:int(numberOfRules)]:
             print(row)
         
-
-
-        # test2 = [
-        # [1, 1, 1, 0, 0],
-        # [1, 1, 1, 1, 1],
-        # [1, 0, 1, 1, 0],
-        # [1, 0, 1, 1, 1],
-        # [1, 1, 1, 1, 0]
-        # ]
-
-        # test_df = pd.DataFrame(data=test2, columns = ['A', 'B', 'C', 'D', 'E'])
-        # frequent_test = frequent_item_sets(test_df, test_df.columns, 2)
-        # print('\n')
-        # for key in frequent_test.keys():
-        #     print('Item Set Length: ', key, '\n', frequent_test[key][0])
-        # confidence = get_association_rules(frequent_test, 1)
-        # for c in confidence:
-        #     print(c)
-
-        # get_lifts(confidence, frequent_test, len(test_df)) 

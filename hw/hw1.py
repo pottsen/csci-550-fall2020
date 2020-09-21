@@ -57,7 +57,6 @@ def frequent_item_sets(adjacency_matrix, C1_itemset, min_sup):
 
     # work through all potential lengths of itemsets and check if it meets minimum support   
     for k in range(2, max_itemset):
-        print('Frequency set size: ', k)
         # reset the list of frequet items and corresponding support for each round
         frequents = []
         supports = []
@@ -69,7 +68,6 @@ def frequent_item_sets(adjacency_matrix, C1_itemset, min_sup):
             if support >= min_sup:
                 frequents.append(candidate)
                 supports.append(support)
-#                 print(candidate, support)
 
         # if no itemsets meet minimum support requirement exit
         if len(frequents) == 0:
@@ -155,7 +153,6 @@ def get_association_rules(frequency_dict, min_conf):
                     y = set(z)-x
 
                     confidence = z_sup/x_sup
-                    print(x, '->', y, confidence)
                     # if confidence greater than the minimum add it to the dictionary else prune all antecedents that are subsets of x as they will not meet the minumu confidence either
                     if confidence >= min_conf:
                         confidence_dict.append([list(x),list(y), confidence])
@@ -182,7 +179,6 @@ def get_evals(confidences_list, frequency_dict, size_dataset):
     for c in confidences_list:
         # c = [X, Y, confidence_XY]
         # lift = confidence_XY / relSupport(Y)
-        print('\n', c)
         # confidence value stored in the 2 array spot
         confidence = c[2]
         # find length of Y
@@ -200,7 +196,6 @@ def get_evals(confidences_list, frequency_dict, size_dataset):
                 support = frequencies[1][i]
         # calculate lift
         lift = confidence/(support/size_dataset)
-        print('lift', lift)
         
         # append lift to c
         c.append(lift)
@@ -259,8 +254,7 @@ def get_evals(confidences_list, frequency_dict, size_dataset):
         
         # calculate leverage
         leverage = rel_xy - rel_x*rel_y
-        print('leverage', leverage)
-        
+
         # append leverage to c
         c.append(leverage)
 
@@ -273,6 +267,9 @@ def get_evals(confidences_list, frequency_dict, size_dataset):
 
 if __name__ == "__main__":
         data = pd.read_csv(sys.argv[1])
+        minSuport = sys.argv[2]
+        conf = sys.argv[3]
+        numberOfRules = sys.argv[4]
         depts = set(data['Dept'])
         transactions = set(data['POS Txn'])
         data["ID"] = data["ID"].astype(str)
@@ -284,25 +281,22 @@ if __name__ == "__main__":
             adjacency_matrix[row[1][2]].loc[row[1][0]] += 1
 
         # frequency = { key: [ list([frequent itemsets]), list([itemsets support])]}
-        frequency = frequent_item_sets(adjacency_matrix, adjacency_matrix.columns, 3)
-        for key in frequency.keys():
-            print('Item Set Length: ', key, '\n', frequency[key])
+        frequency = frequent_item_sets(adjacency_matrix, adjacency_matrix.columns, int(minSuport))
+
         
         # confidences = [X, Y, confidence]
-        confidences = get_association_rules(frequency, 1)
-        for c in confidences:
-            print(c)
+        confidences = get_association_rules(frequency, float(conf))
+
 
         # evals = [X, Y, confidence, lift, leverage]
         # metrics = [lift, leverage]
         evals, metrics = get_evals(confidences, frequency, len(adjacency_matrix))
-        for row in evals:
-            print(row[0], '-->', row[1], '\nConfidence: ', row[2], '\nLift: ', row[3], '\nLeverage: ', row[4])
-        for row in metrics:
-            print(row)
         
 
+        sport = sorted(evals, key=lambda evals: evals[3], reverse=True)
 
+        for row in sport[0:int(numberOfRules)]:
+            print(row)
         
 
 
